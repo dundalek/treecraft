@@ -1,0 +1,12 @@
+{
+  "name": "treecraft",
+  "version": "2026.01.12",
+  "description": "Construct prompts in trees and tree-based problem solving",
+  "main": "dist/index.html",
+  "author": "dundalek",
+  "license": "MIT",
+  "logseq": {
+    "id": "io-github-dundalek-treecraft",
+    "title": "Treecraft"
+  }
+}
