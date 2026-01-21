@@ -1,6 +1,6 @@
 {
   "name": "treecraft",
-  "version": "2026.01.12",
+  "version": "2026.01.21",
   "description": "Construct prompts in trees and tree-based problem solving",
   "main": "dist/index.html",
   "author": "dundalek",

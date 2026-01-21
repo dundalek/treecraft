@@ -36,6 +36,10 @@ The panel shows preview of the constructed prompt that can be copied to clipboar
 - Default keyboard shortcuts are `Cmd+Alt+C` (Mac) or `Ctrl+Alt+C` (Windows/Linux)
 - Or click the copy button in the panel
 
+**Insert directives via slash commands**
+
+Type `/` while editing a block to access slash commands that start with `Treecraft: ` as a shorthand to insert directives.
+
 ### Basic Prompting
 
 Treecraft collects blocks by traversing up the tree from your cursor position, including:
@@ -132,26 +136,22 @@ The panel contains following tabs:
 
 Shows the constructed prompt for the current cursor position which updates as you navigate blocks.
 
-**Page Questions Tab**
+**Tasks Tab**
 
-Lists all blocks marked with the `QUESTION` directive on the current page. Useful for tracking unanswered questions or todos across your entire page.
+Lists actionable items that includes blocks marked with `QUESTION` directive and Logseq `TODO` and `DOING` task markers.
 
-Click any question to navigate to that block. Hold `Shift` while clicking to open the block in the sidebar.
-
-**Thread Questions Tab**
-
-Shows questions within the current thread scope (defined by the closest `THREAD` directive ancestor). Falls back to page questions if no thread is found.
-
-This helps you focus on questions relevant to the current conversation or problem-solving thread.
-
+Controls:
+- Use the toggle to switch between:
+  - Page: Shows all tasks on the current page
+  - Thread: Shows tasks within the current thread scope (defined by the closest `THREAD` directive ancestor)
+- Toggle filtering of tasks based on `BLOCKER` directives.
+  - When filtering is enabled (default): Only unblocked tasks are shown
+  - When filtering is disabled: All tasks are shown, including blocked ones
+- Click any task to navigate to that block. Hold `Shift` while clicking to open the block in the sidebar.
 
 ## Directives
 
 Directives are special keywords that control how blocks are processed. They must be in ALL CAPS at the start of a block's content.
-
-Questions concept is only the initial part of the problem solving.
-Additional concepts and directives regarding workflow will be added in the future.
-
 
 **Available directives:**
 
@@ -161,7 +161,8 @@ Additional concepts and directives regarding workflow will be added in the futur
 - [**NOTE**](#note) - Completely excluded from collected prompts
 - [**USER**](#user) - Marks user messages, directive stripped from output
 - [**ASSISTANT**](#assistant) - Marks assistant messages, directive stripped from output
-- [**QUESTION**](#question) - Marks blocks for tracking in Questions tabs
+- [**QUESTION**](#question) - Marks blocks for tracking in Tasks tab
+- [**BLOCKER**](#blocker) - Marks blocking items for tracking in Tasks tab
 
 ### THREAD
 
@@ -255,14 +256,45 @@ Marks the block as an assistant message. The directive is stripped from the coll
 
 ### QUESTION
 
-Marks blocks as questions for tracking in the Questions tabs. The directive is stripped from the output when collecting prompts.
+Marks blocks as questions for tracking in the Tasks tab. The directive is stripped from the output when collecting prompts.
 
-**Use case**: Track unanswered questions, TODOs, or discussion points.
+**Use case**: Track unanswered questions or discussion points.
 
 **Example:**
 ```
 - QUESTION What is the best approach here?
 - QUESTION Need to verify this assumption
+```
+
+### BLOCKER
+
+Marks blocks as blocking items that affect task visibility in the Tasks tab. The directive is stripped from the output when collecting prompts.
+
+**Use case**: Blockers are used to mark that a solution is not viable and other tasks in a tree can be pruned.
+
+**Blocking rules:**  A task (QUESTION, TODO, DOING) is considered blocked when:
+
+1. **Descendant of BLOCKER**: Any task nested under a BLOCKER block is blocked.
+   ```
+   - BLOCKER Waiting for API access
+     - TODO Implement API integration  ← blocked
+     - QUESTION Which endpoint to use?  ← blocked
+   ```
+
+2. **Sibling of BLOCKER under a task**: When a BLOCKER is a direct child of a task node, it blocks sibling tasks and their descendants.
+   ```
+   - QUESTION Main question
+     - BLOCKER Need clarification first
+     - TODO Subtask A  ← blocked (sibling of BLOCKER under task)
+       - QUESTION Nested question  ← blocked (descendant of blocked sibling)
+   ```
+
+**Exception with OPTION**: When a BLOCKER also has the OPTION directive, it does NOT block siblings. This allows modeling optional blocking scenarios where only one path may be blocked.
+
+```
+- QUESTION Choose approach
+  - OPTION BLOCKER Path A (blocked by external dependency)
+  - OPTION QUESTION Path B  ← NOT blocked (BLOCKER is an OPTION)
 ```
 
 ## Privacy
